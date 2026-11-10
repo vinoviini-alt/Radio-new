@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Radio">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1d120b">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%234a2a18'/%3E%3Crect x='24' y='40' width='132' height='60' rx='6' fill='%23f1e2b8'/%3E%3Cpath d='M94 46v48' stroke='%23c4301c' stroke-width='4'/%3E%3Ccircle cx='60' cy='134' r='16' fill='%23c9a35a'/%3E%3Ccircle cx='120' cy='134' r='16' fill='%23c9a35a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Special+Elite&display=swap">
+<title>Radio</title>
+<style>
+/* Layout: Röhrenradio von vorne. Holzgehäuse, Skalenfenster mit Messingrahmen, Abstimmknopf, Lautsprecherbespannung */
+:root {
+  --room: #1d120b; --wood: #5b341d; --wood-dark: #3b2113; --brass: #c9a35a; --brass-dark: #7d6030;
+  --cream: #f1e2b8; --cream-dark: #d9c48c; --ink: #3a2412; --needle: #c4301c; --glow: #ffd27a;
+  --knob: #231a14; --label: #e8d9b0;
+  --display: "Special Elite", "American Typewriter", "Courier New", monospace;
+  --body: "Oswald", "Arial Narrow", Arial, sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: radial-gradient(120% 80% at 50% 0%, #34201a, var(--room));
+  color: var(--label); font-family: var(--body);
+  padding-block: max(14px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-bottom));
+  padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right));
+  display: flex; justify-content: center; user-select: none; -webkit-user-select: none;
+}
+.radio {
+  width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 16px; padding: 18px 16px 20px;
+  border-radius: 18px; border: 2px solid #231409;
+  background:
+    repeating-linear-gradient(92deg, rgba(0,0,0,.0) 0 5px, rgba(0,0,0,.10) 5px 6px, rgba(255,255,255,.02) 6px 11px),
+    linear-gradient(180deg, #6d4125, var(--wood) 40%, var(--wood-dark));
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.12), inset 0 -3px 8px rgba(0,0,0,.5), 0 18px 40px rgba(0,0,0,.6);
+}
+.plate { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px; font-family: var(--display); color: var(--brass); letter-spacing: .12em; text-shadow: 0 1px 0 #000; }
+.plate b { font-weight: 400; font-size: 20px; }
+.plate span { font-size: 12px; opacity: .8; }
+.bezel { padding: 7px; border-radius: 10px; background: linear-gradient(135deg, #e5c982, var(--brass-dark) 55%, #d9b86e); box-shadow: 0 2px 6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.4); }
+.dial { position: relative; height: 150px; border-radius: 5px; overflow: hidden;
+  background: linear-gradient(180deg, #8a7448, #6f5c36); box-shadow: inset 0 3px 10px rgba(0,0,0,.7); transition: background .8s; }
+.dial.lit { background: radial-gradient(100% 140% at 50% 45%, #fff2c8, var(--cream) 45%, var(--cream-dark)); }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: ew-resize; opacity: .45; transition: opacity .8s;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
+.dial.lit canvas { opacity: 1; }
+.needle { position: absolute; top: 6px; bottom: 34px; left: 50%; width: 3px; margin-left: -1.5px; background: var(--needle); box-shadow: 0 0 6px rgba(196,48,28,.7); border-radius: 2px; pointer-events: none; }
+.needle::before { content: ""; position: absolute; top: -4px; left: -3px; width: 9px; height: 9px; background: var(--needle); border-radius: 50%; }
+.name { position: absolute; left: 10px; right: 10px; bottom: 8px; text-align: center; font-family: var(--display); font-size: 17px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; letter-spacing: .03em; }
+.dial:not(.lit) .name { color: #3a2e1a; opacity: .5; }
+.glass { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(160deg, rgba(255,255,255,.28), transparent 35%, transparent 70%, rgba(255,255,255,.08)); }
+.status { display: flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--label); padding: 0 4px; }
+.lamp { width: 11px; height: 11px; border-radius: 50%; background: #3a1a10; box-shadow: inset 0 1px 2px #000; flex: none; transition: .3s; }
+.lamp.on { background: #ffb347; box-shadow: 0 0 10px 2px rgba(255,170,60,.8); }
+.lamp.ok { background: #8fe27a; box-shadow: 0 0 10px 2px rgba(120,230,100,.7); }
+.lamp.err { background: #e0452e; box-shadow: 0 0 10px 2px rgba(230,70,50,.7); }
+#stat { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.count { opacity: .7; font-size: 12px; }
+.search { position: relative; }
+.search input { width: 100%; font: inherit; font-family: var(--body); font-size: 16px; letter-spacing: .04em; color: var(--label); background: #1c110a; border: 1px solid #0c0703; border-radius: 4px; padding: 11px 12px; outline: none; box-shadow: inset 0 2px 5px rgba(0,0,0,.7); }
+.search input::placeholder { color: rgba(232,217,176,.5); }
+.search input:focus-visible, button:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.results { position: absolute; left: 0; right: 0; bottom: 48px; z-index: 5; margin: 0; padding: 4px; list-style: none; max-height: 260px; overflow-y: auto; background: #120a05; border: 1px solid var(--brass-dark); border-radius: 4px; }
+.results button { width: 100%; text-align: left; font: inherit; font-size: 16px; color: var(--label); background: none; border: 0; padding: 11px 10px; cursor: pointer; }
+.results button:active { background: var(--wood); }
+.controls { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 4px 0; }
+.col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.cap { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--brass); text-shadow: 0 1px 0 #000; }
+.knob { position: relative; border-radius: 50%; touch-action: none; cursor: grab; flex: none;
+  background:
+    radial-gradient(circle at 50% 50%, #3a2d24 0 38%, transparent 39%),
+    repeating-conic-gradient(from 0deg, #1a120c 0 6deg, #2c211a 6deg 12deg);
+  box-shadow: 0 6px 12px rgba(0,0,0,.65), inset 0 0 0 3px #0e0804, 0 0 0 3px var(--brass-dark); }
+.knob::after { content: ""; position: absolute; top: 7%; left: 50%; width: 5px; height: 17%; margin-left: -2.5px; background: var(--cream); border-radius: 3px; box-shadow: 0 0 4px rgba(255,235,180,.6); }
+.knob.big { width: 150px; height: 150px; }
+.knob.small { width: 82px; height: 82px; }
+.knob:active { cursor: grabbing; }
+.power { width: 70px; height: 70px; border-radius: 50%; border: 0; cursor: pointer; font-family: var(--body); font-size: 12px; letter-spacing: .16em; color: var(--label);
+  background: radial-gradient(circle at 35% 30%, #4a3a30, #1a110b); box-shadow: 0 5px 10px rgba(0,0,0,.6), 0 0 0 3px var(--brass-dark); }
+.power:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(0,0,0,.6), 0 0 0 3px var(--brass-dark); }
+.power.on { color: #1b0f06; background: radial-gradient(circle at 35% 30%, #ffe3a0, #d19a3a); }
+.grille { height: 74px; border-radius: 8px; border: 3px solid #26150b; box-shadow: inset 0 4px 10px rgba(0,0,0,.8);
+  background: radial-gradient(#0c0805 1.3px, transparent 1.6px) 0 0 / 7px 7px, linear-gradient(180deg, #4a3523, #3a281a); }
+.hint { text-align: center; font-size: 12px; letter-spacing: .08em; color: rgba(232,217,176,.65); line-height: 1.5; }
+@media (prefers-reduced-motion: reduce) { .dial, canvas, .lamp { transition: none; } }
+</style>
+</head>
+<body>
+<div class="radio">
+  <div class="plate"><b>NORDFUNK</b><span>SUPER 61 &middot; UKW</span></div>
+  <div class="bezel">
+    <div class="dial" id="dial">
+      <canvas id="cv"></canvas>
+      <div class="needle"></div>
+      <div class="name" id="name">Gerät aus</div>
+      <div class="glass"></div>
+    </div>
+  </div>
+  <div class="status"><span class="lamp" id="lamp"></span><span id="stat">Zum Einschalten drücken</span><span class="count" id="count"></span></div>
+  <div class="search">
+    <input id="q" type="search" placeholder="Sender suchen" aria-label="Sender suchen" autocomplete="off" enterkeyhint="search">
+    <ul class="results" id="results" hidden></ul>
+  </div>
+  <div class="controls">
+    <div class="col"><div class="knob small" id="volknob" aria-label="Lautstärke"></div><span class="cap">Laut</span></div>
+    <div class="col"><div class="knob big" id="tuneknob" aria-label="Sendersuche"></div><span class="cap">Sender</span></div>
+    <div class="col"><button class="power" id="power" type="button" aria-pressed="false">AUS</button><span class="cap">Netz</span></div>
+  </div>
+  <div class="grille" aria-hidden="true"></div>
+  <p class="hint">Drehe den großen Knopf oder ziehe die Skala. Am Computer geht auch das Mausrad.</p>
+</div>
+<audio id="au" preload="none" playsinline></audio>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $("cv"), ctx = cv.getContext("2d"), au = $("au");
+  var dialEl = $("dial"), nameEl = $("name"), statEl = $("stat"), lamp = $("lamp"), countEl = $("count");
+  var PX = 7, DEG = 6;
+  var SERVERS = ["https://de1.api.radio-browser.info", "https://de2.api.radio-browser.info", "https://at1.api.radio-browser.info", "https://nl1.api.radio-browser.info"];
+  var st = [], N = 0, pos = 0, target = null, idx = -1, on = false, loading = false;
+  var vol = 0.7, noiseLvl = 0, hiss = 0, vel = 0, dragging = false, dirty = true, tuneTimer = null, rafOn = false;
+  var actx = null, noiseGain = null;
+
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+  function status(text, kind) { statEl.textContent = text; lamp.className = "lamp" + (kind ? " " + kind : ""); }
+
+  /* ---------- Skala ---------- */
+  function freq(i) { return 87.5 + (N > 1 ? i / (N - 1) : 0) * 20.5; }
+  function drawDial() {
+    var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+    var cx = w / 2, base = 22;
+    ctx.strokeStyle = "#3a2412"; ctx.fillStyle = "#3a2412"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, base); ctx.lineTo(w, base); ctx.stroke();
+    if (!N) return;
+    var from = Math.floor(pos - cx / PX) - 1, to = Math.ceil(pos + cx / PX) + 1;
+    ctx.font = "500 13px Oswald, Arial Narrow, sans-serif"; ctx.textAlign = "center";
+    for (var i = from; i <= to; i++) {
+      if (i < 0 || i >= N) continue;
+      var x = cx + (i - pos) * PX, major = i % 25 === 0, mid = i % 5 === 0;
+      ctx.lineWidth = major ? 2 : 1;
+      ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, base + (major ? 30 : mid ? 18 : 9)); ctx.stroke();
+      if (major) ctx.fillText(freq(i).toFixed(1), x, base + 48);
+    }
+  }
+
+  /* ---------- Bewegung ---------- */
+  function setPos(p) {
+    var np = clamp(p, 0, Math.max(0, N - 1));
+    var d = Math.abs(np - pos);
+    pos = np; dirty = true;
+    if (d > 0) { noiseLvl = Math.min(1, noiseLvl + d * 0.25); scheduleTune(); }
+    start();
+  }
+  function scheduleTune() {
+    clearTimeout(tuneTimer);
+    tuneTimer = setTimeout(function () { tuneTimer = null; if (!dragging && Math.abs(vel) < 0.02 && target === null) tune(Math.round(pos)); else scheduleTune(); }, 320);
+  }
+  function glideTo(i) { target = clamp(i, 0, N - 1); start(); }
+
+  function start() { if (!rafOn) { rafOn = true; requestAnimationFrame(frame); } }
+  function frame() {
+    var busy = false;
+    if (target !== null) {
+      var diff = target - pos;
+      if (Math.abs(diff) < 0.05) { setPos(target); target = null; } else { setPos(pos + diff * 0.14); busy = true; }
+    } else if (!dragging && Math.abs(vel) > 0.01) {
+      setPos(pos + vel); vel *= 0.93; busy = true;
+      if (pos <= 0 || pos >= N - 1) vel = 0;
+    }
+    if (dirty) { drawDial(); knobRot(); dirty = false; }
+    noiseLvl *= 0.9; if (noiseLvl < 0.01) noiseLvl = 0; else busy = true;
+    updateNoise();
+    if (busy || dragging || tuneTimer) { requestAnimationFrame(frame); } else { rafOn = false; }
+  }
+  function knobRot() { $("tuneknob").style.transform = "rotate(" + (pos * DEG) % 360 + "deg)"; }
+
+  /* ---------- Rauschen ---------- */
+  function initAudio() {
+    if (actx) { if (actx.state === "suspended") actx.resume(); return; }
+    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    actx = new AC();
+    var len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    var src = actx.createBufferSource(); src.buffer = buf; src.loop = true;
+    var lp = actx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 5200;
+    noiseGain = actx.createGain(); noiseGain.gain.value = 0;
+    src.connect(lp); lp.connect(noiseGain); noiseGain.connect(actx.destination); src.start();
+  }
+  function updateNoise() {
+    if (!noiseGain) return;
+    var level = on ? Math.max(noiseLvl * 0.5, hiss) * (0.2 + vol * 0.8) * 0.35 : 0;
+    noiseGain.gain.setTargetAtTime(level, actx.currentTime, 0.04);
+  }
+
+  /* ---------- Sender ---------- */
+  function tune(i) {
+    if (!on || !N) return;
+    i = clamp(i, 0, N - 1);
+    if (i === idx && !au.error && !au.paused) return;
+    idx = i; var s = st[i];
+    nameEl.textContent = s[0]; store("last", s[1]);
+    status("Empfang …", "on"); hiss = 0.4; updateNoise();
+    au.src = s[1]; au.volume = vol;
+    var p = au.play(); if (p && p.catch) p.catch(function () {});
+    if ("mediaSession" in navigator && window.MediaMetadata) navigator.mediaSession.metadata = new MediaMetadata({ title: s[0], artist: "Nordfunk Webradio" });
+  }
+  au.addEventListener("playing", function () { if (!on || idx < 0) return; hiss = 0; status("Sender gefunden", "ok"); updateNoise(); });
+  au.addEventListener("waiting", function () { if (on && idx >= 0) { status("Empfang …", "on"); hiss = 0.3; updateNoise(); } });
+  au.addEventListener("error", function () { if (!on || idx < 0 || !au.getAttribute("src")) return; status("Kein Empfang", "err"); hiss = 0.5; updateNoise(); });
+  au.addEventListener("stalled", function () { if (on) { hiss = 0.2; updateNoise(); } });
+
+  /* ---------- Senderliste ---------- */
+  function parse(list) {
+    var seen = {}, out = [];
+    list.forEach(function (x) {
+      var url = (x.url_resolved || x.url || "").trim(), name = (x.name || "").replace(/\s+/g, " ").trim();
+      if (!name || url.indexOf("https://") !== 0) return;
+      var key = name.toLowerCase(); if (seen[key]) return; seen[key] = 1;
+      out.push([name, url]);
+    });
+    out.sort(function (a, b) { return a[0].localeCompare(b[0], "de", { sensitivity: "base", numeric: true }); });
+    return out;
+  }
+  function fetchFrom(i) {
+    if (i >= SERVERS.length) return Promise.reject(new Error("no server"));
+    var url = SERVERS[i] + "/json/stations/search?countrycode=DE&hidebroken=true&order=clickcount&reverse=true&limit=6000";
+    return fetch(url).then(function (r) { if (!r.ok) throw new Error("http"); return r.json(); }).catch(function () { return fetchFrom(i + 1); });
+  }
+  function loadStations() {
+    if (N || loading) return Promise.resolve();
+    var raw = store("stations"), ts = +store("stationsAt");
+    if (raw && ts && Date.now() - ts < 86400000) { try { st = JSON.parse(raw); N = st.length; } catch (e) { st = []; N = 0; } }
+    if (N) return Promise.resolve();
+    loading = true; status("Röhren wärmen auf …", "on");
+    return fetchFrom(0).then(function (list) {
+      st = parse(list); N = st.length;
+      store("stations", JSON.stringify(st)); store("stationsAt", String(Date.now()));
+    }).catch(function () { st = []; N = 0; }).then(function () { loading = false; });
+  }
+
+  /* ---------- Ein / Aus ---------- */
+  function power(next) {
+    on = next; var b = $("power");
+    b.classList.toggle("on", on); b.textContent = on ? "AN" : "AUS"; b.setAttribute("aria-pressed", String(on));
+    dialEl.classList.toggle("lit", on);
+    if (!on) {
+      clearTimeout(tuneTimer); tuneTimer = null; hiss = 0; noiseLvl = 0; idx = -1;
+      au.pause(); au.removeAttribute("src"); au.load(); updateNoise();
+      nameEl.textContent = "Gerät aus"; status("Zum Einschalten drücken", ""); return;
+    }
+    initAudio();
+    au.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="; var p = au.play(); if (p && p.catch) p.catch(function () {});
+    nameEl.textContent = "…";
+    loadStations().then(function () {
+      if (!on) return;
+      if (!N) { nameEl.textContent = "Keine Sender"; status("Senderliste nicht erreichbar", "err"); return; }
+      countEl.textContent = N + " Sender";
+      var last = store("last"), i = -1;
+      if (last) for (var k = 0; k < N; k++) if (st[k][1] === last) { i = k; break; }
+      if (i < 0) i = Math.floor(Math.random() * N);
+      pos = i; dirty = true; start(); tune(i);
+    });
+  }
+  $("power").addEventListener("click", function () { power(!on); });
+
+  /* ---------- Knöpfe ---------- */
+  function makeKnob(el, onTurn, onRelease) {
+    var last = null;
+    function ang(e) { var r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; }
+    el.addEventListener("pointerdown", function (e) { el.setPointerCapture(e.pointerId); last = ang(e); dragging = true; vel = 0; target = null; e.preventDefault(); });
+    el.addEventListener("pointermove", function (e) {
+      if (last === null) return;
+      var a = ang(e), d = a - last; if (d > 180) d -= 360; if (d < -180) d += 360;
+      last = a; onTurn(d);
+    });
+    function up() { if (last === null) return; last = null; dragging = false; if (onRelease) onRelease(); start(); }
+    el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+  }
+  makeKnob($("tuneknob"), function (d) { vel = d / DEG * 0.6 + vel * 0.4; if (N) setPos(pos + d / DEG); });
+  function setVol(v) {
+    vol = clamp(v, 0, 1); au.volume = vol; store("vol", String(vol));
+    $("volknob").style.transform = "rotate(" + (-135 + vol * 270) + "deg)";
+    updateNoise();
+  }
+  makeKnob($("volknob"), function (d) { setVol(vol + d / 270); });
+  var sv = parseFloat(store("vol")); setVol(isNaN(sv) ? 0.7 : sv);
+
+  /* Skala ziehen und Mausrad */
+  (function () {
+    var lastX = null;
+    cv.addEventListener("pointerdown", function (e) { cv.setPointerCapture(e.pointerId); lastX = e.clientX; dragging = true; vel = 0; target = null; });
+    cv.addEventListener("pointermove", function (e) { if (lastX === null) return; var d = (lastX - e.clientX) / PX; lastX = e.clientX; vel = d * 0.6 + vel * 0.4; if (N) setPos(pos + d); });
+    function up() { if (lastX === null) return; lastX = null; dragging = false; start(); }
+    cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  })();
+  function wheel(e) { e.preventDefault(); if (N) { vel = 0; setPos(pos + e.deltaY / 25); } }
+  $("tuneknob").addEventListener("wheel", wheel, { passive: false });
+  cv.addEventListener("wheel", wheel, { passive: false });
+
+  /* ---------- Suche ---------- */
+  var q = $("q"), results = $("results");
+  q.addEventListener("focus", function () { if (!N && !loading) loadStations().then(function () { countEl.textContent = N ? N + " Sender" : ""; }); });
+  q.addEventListener("input", function () {
+    var t = q.value.trim().toLowerCase();
+    if (t.length < 2 || !N) { results.hidden = true; return; }
+    var hits = [];
+    for (var i = 0; i < N && hits.length < 40; i++) if (st[i][0].toLowerCase().indexOf(t) !== -1) hits.push(i);
+    results.innerHTML = hits.length ? hits.map(function (i) { return '<li><button type="button" data-i="' + i + '">' + esc(st[i][0]) + '</button></li>'; }).join("") : '<li><button type="button" disabled>Keine Treffer</button></li>';
+    results.hidden = false;
+  });
+  results.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-i]"); if (!b) return;
+    results.hidden = true; q.value = ""; q.blur();
+    if (!on) power(true);
+    glideTo(+b.getAttribute("data-i"));
+  });
+  document.addEventListener("click", function (e) { if (!e.target.closest(".search")) results.hidden = true; });
+
+  window.addEventListener("resize", function () { dirty = true; start(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { dirty = true; start(); });
+  drawDial(); knobRot();
+})();
+</script>
+</body>
+</html>
